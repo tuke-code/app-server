@@ -208,7 +208,12 @@ public class AudioController {
             return null;
         }
         String path = url.getPath() == null ? "" : url.getPath().toLowerCase(Locale.ROOT);
-        if (!path.endsWith(".amr")) {
+        // IM 服务的媒体文件名默认不带扩展名（如 MTQy...-3D-4-1794275919-xxxx），
+        // 若强制要求 .amr 结尾，客户端语音转 mp3 会一律 400。
+        // 这里放行「无扩展名」与「.amr」两种情况；显式声明其它扩展名的仍拒绝。
+        // 真正的类型校验由下载后的 isAmrFile()（AMR 魔数 #!AMR）完成，配合域名白名单足以防 SSRF。
+        String fileName = path.substring(path.lastIndexOf('/') + 1);
+        if (fileName.lastIndexOf('.') >= 0 && !fileName.endsWith(".amr")) {
             return null;
         }
         return url;
